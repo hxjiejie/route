@@ -1,0 +1,19 @@
+{
+  "name": "hxjiejie/route",
+  "description": "Framework's route for php develop",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "xxx",
+      "email": "xxx"
+    }
+  ],
+  "require": {
+    "php": ">=5.4.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "route\\": "src/"
+    }
+  }
+}
