@@ -1,6 +1,6 @@
 <?php
 
-namespace hxjiejie\component;
+namespace hxjiejie\route;
 
 class RouteException extends \Exception {
 
