@@ -1,6 +1,6 @@
 <?php
 
-namespace hxjiejie\route;
+namespace component\route;
 
 class RouteException extends \Exception {
 
@@ -26,6 +26,7 @@ class Route
         ':all' => '.*'
     ];
     public static $error_callback;
+    public static $namespace;
 
     /**
      * Defines a route w/ callback and method
@@ -34,7 +35,7 @@ class Route
      */
     public static function __callstatic($method, $params)
     {
-        $uri        = dirname($_SERVER['PHP_SELF']) . trim($params[0]);
+        $uri        = trim($params[0]);
         $callback   = $params[1];
 
         array_push(self::$routes, $uri);
@@ -54,6 +55,10 @@ class Route
     public static function haltOnMatch($flag = true)
     {
         self::$halts = $flag;
+    }
+
+    public static function setNamespace($namespace) {
+        self::$namespace = $namespace;
     }
 
     /**
@@ -80,18 +85,9 @@ class Route
 
                     // If route is not an object
                     if (!is_object(self::$callbacks[$route])) {
-
-                        // Grab all parts based on a / separator
-                        $parts      = explode('/', self::$callbacks[$route]);
-
-                        // Collect the last index of the array
-                        $last       = end($parts);
-
-                        // Grab the controller name and method call
-                        $segments   = explode('@', $last);
-
-                        // Instanitate controller
-                        $controller = new $segments[0]();
+                        $segments   = explode('@', self::$callbacks[$route]);
+                        $class      = self::$namespace . '\\' . $segments[0];
+                        $controller = new $class;
 
                         // Call method
                         $controller->{$segments[1]}();
@@ -125,17 +121,8 @@ class Route
                         array_shift($matched);
 
                         if (!is_object(self::$callbacks[$pos])) {
-
-                            self::dispatchFunc($pos, $matched);
-
-                            // Grab all parts based on a / separator
-                            $parts      = explode('/', self::$callbacks[$pos]);
-
-                            // Collect the last index of the array
-                            $last       = end($parts);
-
                             // Grab the controller name and method call
-                            $segments   = explode('@', $last);
+                            $segments   = explode('@', self::$callbacks[$pos]);
 
                             // Instanitate controller
                             $controller = new $segments[0]();
@@ -178,35 +165,4 @@ class Route
 
     }
 
-    /**
-     * 解析控制器方法
-     * @param int $pos
-     * @param array $matched
-     * @throws RouteException
-     */
-    protected static function dispatchFunc($pos, $matched)
-    {
-        // Grab all parts based on a / separator
-        $parts      = explode('/', self::$callbacks[$pos]);
-
-        // Collect the last index of the array
-        $last       = end($parts);
-
-        // Grab the controller name and method call
-        $segments   = explode('@', $last);
-
-        // Instanitate controller
-        $controller = new $segments[0]();
-
-        // Fix multi parameters
-        if (!method_exists($controller, $segments[1])) {
-            throw new RouteException('controller and action not found');
-        } else {
-            call_user_func_array(array($controller, $segments[1]), $matched);
-        }
-
-        if (self::$halts) {
-            return;
-        }
-    }
 }
